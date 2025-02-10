@@ -1,34 +1,10 @@
 import { formatEther, formatUnits, hexToBigInt, type Hex } from 'viem';
 import { generatePrivateKey } from 'viem/accounts';
-import {
-  createBundlerClientFromExisting,
-  createSmartAccountClientFromExisting,
-  getEntryPoint,
-  LocalAccountSigner
-} from '@aa-sdk/core';
-import {
-  alchemyFeeEstimator,
-  alchemy,
-  arbitrumSepolia,
-  createAlchemyPublicRpcClient
-} from '@account-kit/infra';
 import { createLightAccount } from '@account-kit/smart-contracts';
-import fs from 'node:fs';
-
+import { createSmartAccountClient, getEntryPoint, LocalAccountSigner } from '@aa-sdk/core';
+import { alchemy, alchemyFeeEstimator, arbitrumSepolia } from '@account-kit/infra';
 import { circlePaymasterMiddleware, getContracts } from '../src';
-
-const transport = alchemy({
-  apiKey: process.env.ALCHEMY_KEY as string
-});
-
-const client = createAlchemyPublicRpcClient({
-  transport,
-  chain: arbitrumSepolia
-});
-
-const block = await client.getBlockNumber();
-
-console.log(`Current block number: ${block}`);
+import fs from 'node:fs';
 
 const ownerKey = (
   fs.existsSync('.owner_private_key')
@@ -40,43 +16,38 @@ const ownerKey = (
       })()
 ) as `0x${string}`;
 
-const owner = LocalAccountSigner.privateKeyToAccountSigner(ownerKey);
+const chain = arbitrumSepolia;
 
-console.log(`Owner address: ${await owner.getAddress()}`);
-
-const entryPoint = getEntryPoint(arbitrumSepolia, { version: '0.7.0' });
-
-const smartAccount = await createLightAccount({
-  signer: owner,
-  chain: arbitrumSepolia,
-  entryPoint,
-  transport
+const transport = alchemy({
+  apiKey: process.env.ALCHEMY_KEY as string
 });
 
-console.log(`Smart account address: ${smartAccount.address}`);
+const account = await createLightAccount({
+  chain,
+  transport,
+  entryPoint: getEntryPoint(arbitrumSepolia, { version: '0.7.0' }),
+  signer: LocalAccountSigner.privateKeyToAccountSigner(ownerKey)
+});
 
-const { usdcContract } = getContracts(client);
-const usdcBalance = await usdcContract.read.balanceOf([smartAccount.address]);
-if (usdcBalance < 1000000) {
-  console.log(
-    'Fund the smart account with USDC from https://faucet.circle.com, then run this again.'
-  );
-  process.exit();
-}
-
-const bundlerClient = createBundlerClientFromExisting(client);
-
-const smartAccountClient = createSmartAccountClientFromExisting({
-  client: bundlerClient,
-  account: smartAccount,
+const smartAccountClient = createSmartAccountClient({
+  chain,
+  transport,
+  account,
   feeEstimator: alchemyFeeEstimator(transport),
   ...circlePaymasterMiddleware()
 });
 
+const { usdcContract } = getContracts(smartAccountClient);
+const usdcBalance = await usdcContract.read.balanceOf([account.address]);
+if (usdcBalance < 1000000) {
+  console.log(`Fund ${account.address} with USDC from https://faucet.circle.com, then run this again.`);
+  process.exit();
+}
+
 const sent = await smartAccountClient.sendUserOperation({
   // Zero-value self-transfer
   uo: {
-    target: smartAccount.address,
+    target: account.address,
     value: 0n,
     data: '0x'
   }
@@ -93,16 +64,8 @@ console.log('User op included in tx:', txHash);
 const receipt = await smartAccountClient.getUserOperationReceipt(sent.hash);
 
 const actualGasCost = hexToBigInt(receipt?.actualGasCost as Hex);
-console.log(
-  'Actual gas cost (paid by paymaster):',
-  formatEther(actualGasCost),
-  'ETH'
-);
+console.log('Actual gas cost (paid by paymaster):', formatEther(actualGasCost), 'ETH');
 
-const balanceAfter = await usdcContract.read.balanceOf([smartAccount.address]);
+const balanceAfter = await usdcContract.read.balanceOf([account.address]);
 const usdcPaid = usdcBalance - balanceAfter;
-console.log(
-  'USDC cost (paid by smart account):',
-  formatUnits(usdcPaid, 6),
-  'USDC'
-);
+console.log('USDC cost (paid by smart account):', formatUnits(usdcPaid, 6), 'USDC');

@@ -5,6 +5,7 @@ This provides an easy integration with [Circle Paymaster](https://developers.cir
 To run the example, clone this repository and then:
 
 ```
+$ echo 'export ALCHEMY_KEY="<your-alchemy-key>"' > .env
 $ npm install
 $ npm run example
 ```
