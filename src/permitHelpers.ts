@@ -1,12 +1,5 @@
-import {
-  maxUint256,
-  erc20Abi,
-  type Address,
-  type Chain,
-  type GetContractReturnType,
-  type TypedDataDefinition,
-  type Client
-} from 'viem';
+import { maxUint256, erc20Abi } from 'viem';
+import type { Address, Chain, GetContractReturnType, TypedDataDefinition, Client } from 'viem';
 
 export const eip2612Abi = [
   ...erc20Abi,

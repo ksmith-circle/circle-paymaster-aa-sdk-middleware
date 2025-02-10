@@ -1,9 +1,4 @@
-import {
-  encodePacked,
-  maxUint256,
-  parseErc6492Signature,
-  numberToHex
-} from 'viem';
+import { encodePacked, maxUint256, parseErc6492Signature, numberToHex } from 'viem';
 import { ChainNotFoundError } from '@aa-sdk/core';
 import type { ClientMiddlewareConfig, ClientMiddlewareFn } from '@aa-sdk/core';
 import { eip2612Permit } from './permitHelpers.js';
@@ -18,10 +13,7 @@ export function circlePaymasterMiddleware(
 ): Pick<ClientMiddlewareConfig, 'dummyPaymasterAndData' | 'paymasterAndData'> {
   const permitAmount = params?.allowancePerUserOp ?? maxUint256;
 
-  const paymasterAndData: ClientMiddlewareFn = async (
-    uo,
-    { client, account }
-  ) => {
+  const paymasterAndData: ClientMiddlewareFn = async (uo, { client, account }) => {
     if (!client.chain) throw new ChainNotFoundError();
 
     const entrypoint = account.getEntryPoint();
@@ -41,18 +33,14 @@ export function circlePaymasterMiddleware(
     });
 
     const wrappedPermitSignature = await account.signTypedData(permitData);
-    const { signature: permitSignature } = parseErc6492Signature(
-      wrappedPermitSignature
-    );
+    const { signature: permitSignature } = parseErc6492Signature(wrappedPermitSignature);
 
     const paymasterData = encodePacked(
       ['uint8', 'address', 'uint256', 'bytes'],
       [0, usdcContract.address, permitAmount, permitSignature]
     );
 
-    const paymasterPostOpGasLimit = numberToHex(
-      await paymasterContract.read.additionalGasCharge()
-    );
+    const paymasterPostOpGasLimit = numberToHex(await paymasterContract.read.additionalGasCharge());
 
     return {
       ...uo,
