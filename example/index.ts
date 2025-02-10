@@ -1,3 +1,4 @@
+import { formatEther, formatUnits, hexToBigInt, type Hex } from 'viem';
 import { generatePrivateKey } from 'viem/accounts';
 import {
   createBundlerClientFromExisting,
@@ -13,10 +14,8 @@ import {
 } from '@account-kit/infra';
 import { createLightAccount } from '@account-kit/smart-contracts';
 import fs from 'node:fs';
-import { circlePaymasterMiddleware } from '../src';
-import { getContracts } from '../src/contractHelpers';
-import { formatEther, formatUnits, hexToBigInt } from 'viem';
-import { Hex } from 'viem';
+
+import { circlePaymasterMiddleware, getContracts } from '../src';
 
 const transport = alchemy({
   apiKey: process.env.ALCHEMY_KEY as string
