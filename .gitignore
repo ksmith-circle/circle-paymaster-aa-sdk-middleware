@@ -1,0 +1,4 @@
+node_modules
+dist
+.env
+.owner_private_key

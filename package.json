@@ -1,0 +1,54 @@
+{
+  "name": "circle-paymaster-aa-sdk-middleware",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typings": "./dist/types/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src/**/*.ts",
+    "!dist/**/*.tsbuildinfo"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:types",
+    "build:esm": "tsc --project tsconfig.json --outDir ./dist/esm",
+    "build:types": "tsc --project tsconfig.json --declarationDir ./dist/types --emitDeclarationOnly --declaration --declarationMap",
+    "example": "source .env && tsx ./example/index.ts",
+    "clean": "rm -rf ./dist"
+  },
+  "dependencies": {
+    "@aa-sdk/core": "^4.12.0",
+    "viem": "^2.20.0"
+  },
+  "devDependencies": {
+    "@account-kit/infra": "^4.12.0",
+    "@account-kit/smart-contracts": "^4.12.0",
+    "@types/node": "^22.13.1",
+    "tsx": "*",
+    "typescript": "^5.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ksmith-circle/circle-paymaster-aa-sdk-middleware.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ksmith-circle/circle-paymaster-aa-sdk-middleware/issues"
+  },
+  "homepage": "https://github.com/ksmith-circle/circle-paymaster-aa-sdk-middleware#readme"
+}
